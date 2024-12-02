@@ -1,7 +1,8 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const connection = require('./config/db')
+const db = require('./config/db')
+const notesRoutes = require('./routes/notesRoutes');
 
 dotenv.config();
 const app = express();
@@ -19,10 +20,12 @@ app.get('/', (req, res) => {
     res.status(200).json(welcomeMessage);
 });
 
+app.use('/notes', notesRoutes);
+
 const HOST = process.env.HOST || 'localhost';
 const PORT = process.env.APP_PORT || 3000;
 
-connection.connect((err) => {
+db.connect((err) => {
     if (err) {
         console.error('Database connection failed:', err.stack);
         process.exit(1);
