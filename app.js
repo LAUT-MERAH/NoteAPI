@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
     res.status(200).json(welcomeMessage);
 });
 
-app.use('/notes', notesRoutes);
+app.use('/api/v1/notes', notesRoutes);
 
 const HOST = process.env.HOST || 'localhost';
 const PORT = process.env.APP_PORT || 3000;
