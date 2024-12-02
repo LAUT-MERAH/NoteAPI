@@ -9,6 +9,16 @@ app.use(cors());
 
 app.use(express.json());
 
+const welcomeMessage = {
+    status: 'success',
+    message: 'API is up and running! 🚀 Welcome To NoteAPI',
+    timestamp: new Date().toISOString()
+};
+
+app.get('/', (req, res) => {
+    res.status(200).json(welcomeMessage);
+});
+
 const HOST = process.env.HOST || 'localhost';
 const PORT = process.env.APP_PORT || 3000;
 
