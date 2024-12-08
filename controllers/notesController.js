@@ -124,7 +124,6 @@ exports.updateNote = (req, res) => {
         });
     }
 
-    // Validate and parse user-provided datetime
     const datetimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
     if (!datetimeRegex.test(datetime)) {
         console.error('Invalid datetime format provided:', datetime);
