@@ -9,7 +9,7 @@ NoteAPI is a simple backend API for a note taking application. It is built using
 - Retrieve a single note by ID [Under development]
 - Create a new note with automatic timestamp 
 - Update existing note [Under development]
-- Delete a note by ID [Under development]
+- Delete a note by ID
 
 
 ## Installation and Setup
