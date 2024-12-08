@@ -6,9 +6,9 @@ NoteAPI is a simple backend API for a note taking application. It is built using
 ## Features
 
 - Retrieve all notes
-- Retrieve a single note by ID [Under development]
+- Retrieve a single note by ID
 - Create a new note with automatic timestamp 
-- Update existing note [Under development]
+- Update existing note by ID
 - Delete a note by ID
 
 
@@ -85,6 +85,10 @@ Step 10: Test the API, The server will run on http://localhost:3000 by default. 
 ```bash
 curl -X GET http://localhost:3000/api/v1/notes
 ```
+
+## API Endpoints
+
+For detailed information on the API endpoints, refer to the [API Documentation](NoteAPI.postman_collection.json) file.
 
 ## License
 This project is open-source and available under the [MIT License](LICENSE)
