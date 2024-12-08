@@ -1,36 +1,44 @@
 const db = require('../config/db');
 
 exports.getAllNotes = (req, res) => {
-    console.log('Fetching all notes...');
-    
     const { page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;
 
     const sql = `SELECT * FROM notes LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`;
-    
     db.execute(sql, (err, results) => {
         if (err) {
             console.error('Error executing query:', err.message);
             return res.status(500).json({ status: 'error', error: err.message });
         }
-        
+
         if (results.length === 0) {
-            console.log('No notes found.');
-            return res.status(200).json({ 
-                status: 'success', 
+            return res.status(200).json({
+                status: 'success',
                 message: 'No notes available.',
-                data: [] 
+                data: [],
             });
         }
 
-        console.log('Notes found:', results);
-        res.status(200).json({ 
+        const formattedResults = results.map(note => {
+            const utcDate = new Date(`${note.datetime}Z`);
+            const wibDate = new Date(utcDate.getTime() + 7 * 60 * 60 * 1000); 
+            const formattedDatetime = wibDate.toISOString().slice(0, 19).replace('T', ' ');
+
+            return {
+                ...note,
+                datetime: formattedDatetime,
+            };
+        });
+
+        res.status(200).json({
             status: 'success',
             message: 'Notes retrieved successfully.',
-            data: results 
+            data: formattedResults,
         });
     });
 };
+
+
 
 exports.createNote = (req, res) => {
     const { title, note } = req.body;
