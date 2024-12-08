@@ -108,10 +108,9 @@ exports.getNoteById = (req, res) => {
     });
 };
 
-//updated updateNote per request of Kris
 exports.updateNote = (req, res) => {
     const noteId = req.params.id;
-    const { title, note, datetime } = req.body; 
+    const { title, note, datetime } = req.body;
     const errors = [];
 
     if (!title) errors.push('Title is required.');
@@ -119,18 +118,28 @@ exports.updateNote = (req, res) => {
     if (!datetime) errors.push('Datetime is required.');
 
     if (errors.length > 0) {
-        return res.status(400).json({ 
-            status: 'error', 
-            message: errors 
+        return res.status(400).json({
+            status: 'error',
+            message: errors,
         });
     }
 
-    const wibDate = new Date(datetime); 
-    if (isNaN(wibDate.getTime())) {
-        console.error('Invalid datetime provided:', datetime);
+    // Validate and parse user-provided datetime
+    const datetimeRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+    if (!datetimeRegex.test(datetime)) {
+        console.error('Invalid datetime format provided:', datetime);
         return res.status(400).json({
             status: 'error',
             message: 'Invalid datetime format. Use YYYY-MM-DD HH:mm:ss format.',
+        });
+    }
+
+    const wibDate = new Date(datetime.replace(' ', 'T') + '.000Z');
+    if (isNaN(wibDate.getTime())) {
+        console.error('Invalid datetime parsing:', datetime);
+        return res.status(400).json({
+            status: 'error',
+            message: 'Datetime could not be parsed. Check format and validity.',
         });
     }
     const utcDate = new Date(wibDate.getTime() - 7 * 60 * 60 * 1000);
@@ -145,21 +154,19 @@ exports.updateNote = (req, res) => {
 
         if (result.affectedRows === 0) {
             console.log('Note not found for updating.');
-            return res.status(404).json({ 
-                status: 'error', 
-                message: 'Note not found.' 
+            return res.status(404).json({
+                status: 'error',
+                message: 'Note not found.',
             });
         }
 
         console.log('Note updated successfully.');
-        res.status(200).json({ 
-            status: 'success', 
+        res.status(200).json({
+            status: 'success',
             message: 'Note updated successfully.',
-            updated_at: formattedDatetime 
         });
     });
 };
-
 
 exports.deleteNote = (req, res) => {
     const noteId = req.params.id;
