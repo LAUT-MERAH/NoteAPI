@@ -61,3 +61,70 @@ exports.createNote = (req, res) => {
         });
     });
 };
+
+exports.updateNote = (req, res) => {
+    const noteId = req.params.id;
+    const { title, note } = req.body;
+    const errors = [];
+
+    if (!title) errors.push('Title is required.');
+    if (!note) errors.push('Note is required.');
+
+    if (errors.length > 0) {
+        return res.status(400).json({ 
+            status: 'error', 
+            message: errors 
+        });
+    }
+
+    const datetime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+    const sql = 'UPDATE notes SET title = ?, note = ?, datetime = ? WHERE id = ?';
+    db.execute(sql, [title, note, datetime, noteId], (err, result) => {
+        if (err) {
+            console.error('Error updating note:', err.message);
+            return res.status(500).json({ status: 'error', message: 'Failed to update note.' });
+        }
+        
+        if (result.affectedRows === 0) {
+            console.log('Note not found for updating.');
+            return res.status(404).json({ 
+                status: 'error', 
+                message: 'Note not found.' 
+            });
+        }
+
+        console.log('Note updated successfully.');
+        res.status(200).json({ 
+            status: 'success', 
+            message: 'Note updated successfully.',
+            updated_at: datetime
+        });
+    });
+};
+
+exports.deleteNote = (req, res) => {
+    const noteId = req.params.id;
+    const sql = 'DELETE FROM notes WHERE id = ?';
+    
+    db.execute(sql, [noteId], (err, result) => {
+        if (err) {
+            console.error('Error deleting note:', err.message);
+            return res.status(500).json({ status: 'error', message: 'Failed to delete note.' });
+        }
+
+        if (result.affectedRows === 0) {
+            console.log('Note not found for deletion.');
+            return res.status(404).json({ 
+                status: 'error', 
+                message: 'Note not found.' 
+            });
+        }
+
+        console.log('Note deleted successfully.');
+        res.status(200).json({ 
+            status: 'success', 
+            message: 'Note deleted successfully.' 
+        });
+    });
+};
