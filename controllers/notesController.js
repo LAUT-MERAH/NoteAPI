@@ -70,13 +70,54 @@ exports.createNote = (req, res) => {
     });
 };
 
+exports.getNoteById = (req, res) => {
+    const noteId = req.params.id;
+    console.log('Requested Note ID:', noteId); 
+
+    const sql = 'SELECT * FROM notes WHERE id = ?';
+    db.execute(sql, [noteId], (err, results) => {
+        if (err) {
+            console.error('Error fetching note by ID:', err.message);
+            return res.status(500).json({ status: 'error', message: 'Failed to fetch note.' });
+        }
+
+        console.log('Query Results:', results); 
+        if (results.length === 0) {
+            console.log('Note not found for ID:', noteId); 
+            return res.status(404).json({ 
+                status: 'error', 
+                message: 'Note not found.' 
+            });
+        }
+
+        const utcDate = new Date(`${results[0].datetime}Z`);
+        const wibDate = new Date(utcDate.getTime() + 7 * 60 * 60 * 1000);
+        const formattedDatetime = wibDate.toISOString().slice(0, 19).replace('T', ' ');
+
+        const formattedResult = {
+            ...results[0],
+            datetime: formattedDatetime,
+        };
+
+        console.log('Note found:', formattedResult);
+        res.status(200).json({
+            status: 'success',
+            message: 'Note retrieved successfully.',
+            data: formattedResult,
+        });
+    });
+};
+
+
 exports.updateNote = (req, res) => {
     const noteId = req.params.id;
-    const { title, note } = req.body;
+    const { title, note, datetime } = req.body; // Datetime provided by the user in WIB format
     const errors = [];
 
+    // Validate required fields
     if (!title) errors.push('Title is required.');
     if (!note) errors.push('Note is required.');
+    if (!datetime) errors.push('Datetime is required.');
 
     if (errors.length > 0) {
         return res.status(400).json({ 
@@ -85,15 +126,25 @@ exports.updateNote = (req, res) => {
         });
     }
 
-    const datetime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    // Convert user-provided WIB datetime to UTC
+    const wibDate = new Date(datetime); // Assumes datetime is in YYYY-MM-DD HH:mm:ss format
+    if (isNaN(wibDate.getTime())) {
+        console.error('Invalid datetime provided:', datetime);
+        return res.status(400).json({
+            status: 'error',
+            message: 'Invalid datetime format. Use YYYY-MM-DD HH:mm:ss format.',
+        });
+    }
+    const utcDate = new Date(wibDate.getTime() - 7 * 60 * 60 * 1000); // Subtract 7 hours for WIB to UTC
+    const formattedDatetime = utcDate.toISOString().slice(0, 19).replace('T', ' ');
 
     const sql = 'UPDATE notes SET title = ?, note = ?, datetime = ? WHERE id = ?';
-    db.execute(sql, [title, note, datetime, noteId], (err, result) => {
+    db.execute(sql, [title, note, formattedDatetime, noteId], (err, result) => {
         if (err) {
             console.error('Error updating note:', err.message);
             return res.status(500).json({ status: 'error', message: 'Failed to update note.' });
         }
-        
+
         if (result.affectedRows === 0) {
             console.log('Note not found for updating.');
             return res.status(404).json({ 
@@ -106,10 +157,11 @@ exports.updateNote = (req, res) => {
         res.status(200).json({ 
             status: 'success', 
             message: 'Note updated successfully.',
-            updated_at: datetime
+            updated_at: formattedDatetime // Returning UTC format datetime
         });
     });
 };
+
 
 exports.deleteNote = (req, res) => {
     const noteId = req.params.id;
